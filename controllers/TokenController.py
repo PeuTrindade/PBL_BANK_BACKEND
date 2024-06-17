@@ -9,7 +9,9 @@ class TokenController:
         try:
             while True:
                 if database['token']:
-                    time.sleep(5)
+                    tokenCoolDown = 5
+
+                    time.sleep(tokenCoolDown)
 
                     currentApiIndex = database['apisList'].index(database['apiPort'])
                     nextPort = None
@@ -19,11 +21,18 @@ class TokenController:
                     else:
                         nextPort = database['apisList'][int(currentApiIndex) + 1]
 
-                    requests.post(f'http://localhost:{nextPort}/receiveToken', json={'token': database['token'] })
+                    try:
+                        tokenShareRequest = requests.post(f'http://localhost:{nextPort}/receiveToken', json={'token': database['token'] })
+                        
+                        if tokenShareRequest.status_code == 200:
+                            TokenController.removeToken()
 
-                    TokenController.removeToken()
+                            print(f'Token enviado com sucesso para localhost:{nextPort}!')
+                        else:
+                            print(f'Falha ao enviar token para localhost:{nextPort}! Tentaremos novamente em {tokenCoolDown} segundos.')
 
-                    print(f'Token enviado com sucesso para localhost:{nextPort}!')
+                    except requests.exceptions.RequestException as e:
+                        print(f'Falha ao enviar token para localhost:{nextPort}! Tentaremos novamente em {tokenCoolDown} segundos.')
         except:
             return { "message": "Ocorreu um erro inesperado!", "ok": False }
 
