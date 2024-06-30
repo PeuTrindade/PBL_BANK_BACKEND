@@ -1,4 +1,5 @@
 from models.TokenModel import TokenModel
+from controllers.AccountController import AccountController
 from database.database import database
 import requests
 import time
@@ -9,7 +10,7 @@ class TokenController:
         try:
             while True:
                 if database['token']:
-                    tokenCoolDown = 5
+                    tokenCoolDown = 30
 
                     time.sleep(tokenCoolDown)
 
@@ -61,7 +62,24 @@ class TokenController:
     def doTransactions():
         try:
             while True:
-                if database['token']:
-                    print(database['transactions'][0])
+                for transaction in database['transactions']:
+                    if database['token']:
+                        database['doingTransaction'] = True
+
+                        if type(transaction) is list:
+                            for subTransaction in transaction:
+                               AccountController.transfer(subTransaction['from'], subTransaction['to'], subTransaction['agency'], subTransaction['value'])
+                            
+                            database['doingTransaction'] = False
+                           
+                            database['transactions'].remove(transaction)
+                        else:
+                            AccountController.transfer(transaction['from'], transaction['to'], transaction['agency'], transaction['value'], transaction['toReceive'])
+
+                            database['doingTransaction'] = False
+
+                            database['transactions'].remove(transaction)
+                    else:
+                        break
         except:
             return { "message": "Ocorreu um erro inesperado!", "ok": False }

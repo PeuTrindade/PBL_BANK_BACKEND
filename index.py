@@ -120,8 +120,27 @@ def transfer(fromAccountPass):
         toAccountPass = requestBody.get('to')
         value = requestBody.get('amount')
         toAgency = requestBody.get('agency')
+        toReceive = requestBody.get('toReceive')
 
-        controllerResponse = AccountController.addTransaction(fromAccountPass, toAccountPass, toAgency, value)
+        controllerResponse = AccountController.addTransaction(fromAccountPass, toAccountPass, toAgency, value, toReceive)
+
+        if controllerResponse['ok'] == False:
+            return jsonify({ "message": controllerResponse['message'] }), 400
+        
+        return jsonify({ "account": controllerResponse['message'] }), 200
+
+    except Exception as e:
+        return jsonify({ "message": "Ocorreu um erro interno: " + str(e)  }), 500
+
+
+@app.route('/account/multipleTransfer/<string:fromAccountPass>', methods=['POST'])
+def multipleTransfer(fromAccountPass):
+    try:
+        requestBody = request.json
+
+        multipleData = requestBody.get('transactions')
+
+        controllerResponse = AccountController.addTransactions(fromAccountPass, multipleData)
 
         if controllerResponse['ok'] == False:
             return jsonify({ "message": controllerResponse['message'] }), 400

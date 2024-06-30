@@ -2,6 +2,7 @@ from models.AccountModel import AccountModel
 from models.ClientModel import ClientModel
 from database.database import database
 import socket
+import requests
 
 class AccountController:
     @staticmethod
@@ -41,7 +42,7 @@ class AccountController:
         return { "message": "Conta não existente!", "ok": False }
     
     @staticmethod
-    def addTransaction(fromAccountPass, toAccountPass, toAgency, value):
+    def addTransaction(fromAccountPass, toAccountPass, toAgency, value, toReceive):
         if fromAccountPass == None or toAccountPass == None or toAgency == None or value == None:
             return { "message": "Campos inválidos enviados!", "ok": False }
 
@@ -49,7 +50,8 @@ class AccountController:
             "from": fromAccountPass,
             "to": toAccountPass,
             "agency": toAgency,
-            "value": value
+            "value": value,
+            "toReceive": toReceive
         }
 
         database['transactions'].append(transactionObj)
@@ -57,32 +59,72 @@ class AccountController:
         return { "message": "Transferência adicionada à fila com sucesso!", "ok": True }
     
     @staticmethod
-    def transfer(fromAccountPass, toAccountPass, toAgency, value):
+    def addTransactions(fromAccountPass, transactions):
+        if len(transactions) == 0:
+            return { "message": "Pacote vazio!", "ok": False }
+
+        transactions_formatted = []
+
+        for transaction in transactions:
+            obj = {
+                "from": fromAccountPass,
+                "to": transaction['to'],
+                "agency": transaction['agency'],
+                "value": transaction['amount'],
+                "toReceive": transaction['toReceive']
+            }
+
+            transactions_formatted.append(obj)
+
+        database['transactions'].append(transactions_formatted)
+
+        return { "message": "Pacote de transferências adicionados à fila com sucesso!", "ok": True }
+    
+    @staticmethod
+    def transfer(fromAccountPass, toAccountPass, toAgency, value, toReceive):
         fromAccount = AccountModel.findByAccountPass(fromAccountPass)
         toAccount = AccountModel.findByAccountPass(toAccountPass)
 
-        if fromAccount:
-            if float(fromAccount['balance']) >= float(value):
-                hostname = socket.gethostname()
-                ip_address = socket.gethostbyname(hostname)
-                agency = ip_address.split(".")[-1]
+        if toReceive == 1:
+            if toAccount:
+                AccountModel.receive(account=toAccount, value=value)
 
-                if str(toAgency) == str(agency):
-                    if toAccount:
-                        AccountModel.transfer(account=fromAccount, value=value)
-                        AccountModel.receive(account=toAccount, value=value)
-
-                        return { "message": "Transferência realizada com sucesso!", "ok": True }
-                    else:
-                        return { "message": "Conta destino não encontrada!", "ok": False }
-                else:
-                    # Lógica para transferências entre bancos distintos.
-                    return { "message": "Transferência realizada para outro banco com sucesso!", "ok": True }
+                print("Transferência recebida com sucesso!")
             else:
-                return { "message": "Saldo insuficiente!", "ok": False }
-        
+                print("Conta destino não encontrada!")
         else:
-            return { "message": "Conta remetente não encontrada!", "ok": False }
+            if fromAccount:
+                if float(fromAccount['balance']) >= float(value):
+                    agency = str(database['apiPort'])[0]
+
+                    if str(toAgency) == str(agency):
+                        if toAccount:
+                            AccountModel.transfer(account=fromAccount, value=value)
+                            AccountModel.receive(account=toAccount, value=value)
+
+                            print("Transferência realizada com sucesso!")
+                        else:
+                            print("Conta destino não encontrada!")
+                    else:
+                        if toReceive == 0:
+                            bankPort = int(toAgency) * 1000
+
+                            try:
+                                transferRequest = requests.post(f'http://localhost:{bankPort}/account/transfer/{fromAccountPass}', json={ "to": toAccountPass, "amount": value, "agency": toAgency, "toReceive": 1 })
+
+                                if transferRequest.status_code == 200:
+                                    AccountModel.transfer(account=fromAccount, value=value)
+                    
+                                    print("Transferência realizada para outro banco com sucesso!")
+                                else:
+                                    print("Transferência para outro banco falhou!")
+                            except requests.exceptions.RequestException as e:
+                                print(f'Falha ao transferir para localhost:{bankPort}!')
+                else:
+                    print("Saldo insuficiente!")
+            
+            else:
+                print("Conta remetente não encontrada!")
         
     @staticmethod
     def deposit(accountPass, amount):
