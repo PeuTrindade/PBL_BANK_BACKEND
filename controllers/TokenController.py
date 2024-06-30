@@ -9,7 +9,7 @@ class TokenController:
     def sendToken():
         try:
             while True:
-                if database['token']:
+                if database['token'] and database['doingTransaction'] == False:
                     tokenCoolDown = 30
 
                     time.sleep(tokenCoolDown)
@@ -68,7 +68,7 @@ class TokenController:
 
                         if type(transaction) is list:
                             for subTransaction in transaction:
-                               AccountController.transfer(subTransaction['from'], subTransaction['to'], subTransaction['agency'], subTransaction['value'])
+                                AccountController.transfer(subTransaction['from'], subTransaction['to'], subTransaction['agency'], subTransaction['value'], subTransaction['toReceive'])
                             
                             database['doingTransaction'] = False
                            
