@@ -4,6 +4,7 @@ import threading
 from database.database import database
 from controllers.ClientController import ClientController
 from controllers.AccountController import AccountController
+import socket
 
 app = Flask(__name__)
 
@@ -186,9 +187,11 @@ def withdraw(accountPass):
 
 
 if __name__ == '__main__':
-    apiPort = input('Qual a porta do seu Banco?: ')
+    bankAgency = input('Qual a agência do seu banco?: ')
 
-    database['apiPort'] = int(apiPort)
+    bankAgencyFrag = bankAgency.split(':')
+
+    database['bankAgency'] = bankAgency
 
     # Inicia uma thread para enviar o token de forma assíncrona
     sender_thread = threading.Thread(target=send_token, daemon=True)
@@ -198,4 +201,4 @@ if __name__ == '__main__':
     sender_thread = threading.Thread(target=do_transactions, daemon=True)
     sender_thread.start()
 
-    app.run(debug=False, port=apiPort)
+    app.run(host=bankAgencyFrag[0],debug=False, port=bankAgencyFrag[1])

@@ -10,30 +10,30 @@ class TokenController:
         try:
             while True:
                 if database['token'] and database['doingTransaction'] == False:
-                    tokenCoolDown = 30
+                    tokenCoolDown = 3000
 
                     time.sleep(tokenCoolDown)
 
-                    currentApiIndex = database['apisList'].index(database['apiPort'])
-                    nextPort = None
+                    currentApiIndex = database['apisList'].index(database['bankAgency'])
+                    nextBank = None
                     
                     if len(database['apisList']) == int(currentApiIndex) + 1:
-                        nextPort = database['apisList'][0]
+                        nextBank = database['apisList'][0]
                     else:
-                        nextPort = database['apisList'][int(currentApiIndex) + 1]
+                        nextBank = database['apisList'][int(currentApiIndex) + 1]
 
                     try:
-                        tokenShareRequest = requests.post(f'http://localhost:{nextPort}/receiveToken', json={'token': database['token'] })
+                        tokenShareRequest = requests.post(f'http://{nextBank}/receiveToken', json={'token': database['token'] })
                         
                         if tokenShareRequest.status_code == 200:
                             TokenController.removeToken()
 
-                            print(f'Token enviado com sucesso para localhost:{nextPort}!')
+                            print(f'Token enviado com sucesso para localhost:{nextBank}!')
                         else:
-                            print(f'Falha ao enviar token para localhost:{nextPort}! Tentaremos novamente em {tokenCoolDown} segundos.')
+                            print(f'Falha ao enviar token para localhost:{nextBank}! Tentaremos novamente em {tokenCoolDown} segundos.')
 
                     except requests.exceptions.RequestException as e:
-                        print(f'Falha ao enviar token para localhost:{nextPort}! Tentaremos novamente em {tokenCoolDown} segundos.')
+                        print(f'Falha ao enviar token para localhost:{nextBank}! Tentaremos novamente em {tokenCoolDown} segundos.')
         except:
             return { "message": "Ocorreu um erro inesperado!", "ok": False }
 

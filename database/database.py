@@ -1,9 +1,9 @@
 database = {
-    "apiPort": None,
+    "bankAgency": None,
     "doingTransaction": False,
     "clients": [],
     "accounts": [],
     "token": None,
-    "apisList": [3000, 4000],
+    "apisList": ["172.28.17.16:3000"],
     "transactions": []
 }

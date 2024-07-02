@@ -44,7 +44,6 @@ class AccountController:
     @staticmethod
     def verifyAccountExists(accountPass, accounts):
         if len(accounts) > 0:
-            print(accounts)
             for account in accounts:
                 if account['accountPass'] == accountPass:
                     return True
@@ -61,7 +60,7 @@ class AccountController:
         if toReceive == 0:
             fromAccount = AccountModel.findByAccountPass(fromAccountPass)
             toAccount = AccountModel.findByAccountPass(toAccountPass)
-            agency = str(database['apiPort'])[0]
+            agency = database['bankAgency']
 
             if fromAccount == None:
                 return { "message": "Conta remetente não encontrada!", "ok": False }
@@ -70,17 +69,18 @@ class AccountController:
                 if toAccount == None:
                     return { "message": "Conta destino não encontrada!", "ok": False }
             else:
-                bankPort = int(toAgency) * 1000
-        
-                accountListRequest = requests.get(f'http://localhost:{bankPort}/account')
-            
-                if accountListRequest.status_code == 200:
-                    accounts = accountListRequest.json()
+                try:
+                    accountListRequest = requests.get(f'http://{toAgency}/account')
+                
+                    if accountListRequest.status_code == 200:
+                        accounts = accountListRequest.json()
 
-                    if AccountController.verifyAccountExists(accountPass=toAccountPass, accounts=accounts['accounts']) == False:
-                        return { "message": "Conta destino não encontrada no banco de destino!", "ok": False }
-                else:
-                    return { "message": "Erro ao buscar conta destino em outro banco!", "ok": False }
+                        if AccountController.verifyAccountExists(accountPass=toAccountPass, accounts=accounts['accounts']) == False:
+                            return { "message": "Conta destino não encontrada no banco de destino!", "ok": False }
+                    else:
+                        return { "message": "Erro ao buscar conta destino em outro banco!", "ok": False }
+                except:
+                    return { "message": "Erro interno ao buscar conta em outro banco!", "ok": False }
 
             if float(fromAccount['balance']) < float(value):
                 return { "message": "Saldo insuficiente!", "ok": False }
@@ -120,7 +120,7 @@ class AccountController:
             if t['toReceive'] == 0:
                 fromAccount = AccountModel.findByAccountPass(fromAccountPass)
                 toAccount = AccountModel.findByAccountPass(t['to'])
-                agency = str(database['apiPort'])[0]
+                agency = database['bankAgency']
 
                 if fromAccount == None:
                     return { "message": "Conta remetente não encontrada!", "ok": False }
@@ -129,17 +129,20 @@ class AccountController:
                     if toAccount == None:
                         return { "message": "Conta destino não encontrada!", "ok": False }
                 else:
-                    bankPort = int(t['agency']) * 1000
+                    bank = t['agency']
 
-                    accountListRequest = requests.get(f'http://localhost:{bankPort}/account')
+                    try:
+                        accountListRequest = requests.get(f'http://{bank}/account')
 
-                    if accountListRequest.status_code == 200:
-                        accounts = accountListRequest.json()
+                        if accountListRequest.status_code == 200:
+                            accounts = accountListRequest.json()
 
-                        if AccountController.verifyAccountExists(accountPass=t['to'], accounts=accounts['accounts']) == False:
-                            return { "message": "Conta destino não encontrada no banco de destino!", "ok": False }
-                    else:
-                        return { "message": "Erro ao buscar conta destino em outro banco!", "ok": False }
+                            if AccountController.verifyAccountExists(accountPass=t['to'], accounts=accounts['accounts']) == False:
+                                return { "message": "Conta destino não encontrada no banco de destino!", "ok": False }
+                        else:
+                            return { "message": "Erro ao buscar conta destino em outro banco!", "ok": False }
+                    except:
+                        return { "message": "Erro interno ao buscar conta em outro banco!", "ok": False }
 
                 if float(fromAccount['balance']) < float(t['value']):
                     return { "message": "Saldo insuficiente!", "ok": False }
@@ -163,7 +166,7 @@ class AccountController:
         else:
             if fromAccount:
                 if float(fromAccount['balance']) >= float(value):
-                    agency = str(database['apiPort'])[0]
+                    agency = database['bankAgency']
 
                     if str(toAgency) == str(agency):
                         if toAccount:
@@ -175,10 +178,8 @@ class AccountController:
                             print("Conta destino não encontrada!")
                     else:
                         if toReceive == 0:
-                            bankPort = int(toAgency) * 1000
-
                             try:
-                                transferRequest = requests.post(f'http://localhost:{bankPort}/account/transfer/{fromAccountPass}', json={ "to": toAccountPass, "amount": value, "agency": toAgency, "toReceive": 1 })
+                                transferRequest = requests.post(f'http://{toAgency}/account/transfer/{fromAccountPass}', json={ "to": toAccountPass, "amount": value, "agency": toAgency, "toReceive": 1 })
 
                                 if transferRequest.status_code == 200:
                                     AccountModel.transfer(account=fromAccount, value=value)
@@ -187,7 +188,7 @@ class AccountController:
                                 else:
                                     print("Transferência para outro banco falhou!")
                             except requests.exceptions.RequestException as e:
-                                print(f'Falha ao transferir para localhost:{bankPort}!')
+                                print(f'Falha ao transferir para {toAgency}!')
                 else:
                     print("Saldo insuficiente!")
             
