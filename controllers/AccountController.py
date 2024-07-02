@@ -42,9 +42,48 @@ class AccountController:
         return { "message": "Conta não existente!", "ok": False }
     
     @staticmethod
+    def verifyAccountExists(accountPass, accounts):
+        if len(accounts) > 0:
+            print(accounts)
+            for account in accounts:
+                if account['accountPass'] == accountPass:
+                    return True
+                
+            return False
+        
+        return False
+    
+    @staticmethod
     def addTransaction(fromAccountPass, toAccountPass, toAgency, value, toReceive):
         if fromAccountPass == None or toAccountPass == None or toAgency == None or value == None:
             return { "message": "Campos inválidos enviados!", "ok": False }
+        
+        if toReceive == 0:
+            fromAccount = AccountModel.findByAccountPass(fromAccountPass)
+            toAccount = AccountModel.findByAccountPass(toAccountPass)
+            agency = str(database['apiPort'])[0]
+
+            if fromAccount == None:
+                return { "message": "Conta remetente não encontrada!", "ok": False }
+            
+            if str(agency) == str(toAgency):
+                if toAccount == None:
+                    return { "message": "Conta destino não encontrada!", "ok": False }
+            else:
+                bankPort = int(toAgency) * 1000
+        
+                accountListRequest = requests.get(f'http://localhost:{bankPort}/account')
+            
+                if accountListRequest.status_code == 200:
+                    accounts = accountListRequest.json()
+
+                    if AccountController.verifyAccountExists(accountPass=toAccountPass, accounts=accounts['accounts']) == False:
+                        return { "message": "Conta destino não encontrada no banco de destino!", "ok": False }
+                else:
+                    return { "message": "Erro ao buscar conta destino em outro banco!", "ok": False }
+
+            if float(fromAccount['balance']) < float(value):
+                return { "message": "Saldo insuficiente!", "ok": False }
 
         transactionObj = {
             "from": fromAccountPass,
@@ -75,6 +114,35 @@ class AccountController:
             }
 
             transactions_formatted.append(obj)
+
+
+        for t in transactions_formatted:
+            if t['toReceive'] == 0:
+                fromAccount = AccountModel.findByAccountPass(fromAccountPass)
+                toAccount = AccountModel.findByAccountPass(t['to'])
+                agency = str(database['apiPort'])[0]
+
+                if fromAccount == None:
+                    return { "message": "Conta remetente não encontrada!", "ok": False }
+                
+                if str(agency) == str(t['agency']):
+                    if toAccount == None:
+                        return { "message": "Conta destino não encontrada!", "ok": False }
+                else:
+                    bankPort = int(t['agency']) * 1000
+
+                    accountListRequest = requests.get(f'http://localhost:{bankPort}/account')
+
+                    if accountListRequest.status_code == 200:
+                        accounts = accountListRequest.json()
+
+                        if AccountController.verifyAccountExists(accountPass=t['to'], accounts=accounts['accounts']) == False:
+                            return { "message": "Conta destino não encontrada no banco de destino!", "ok": False }
+                    else:
+                        return { "message": "Erro ao buscar conta destino em outro banco!", "ok": False }
+
+                if float(fromAccount['balance']) < float(t['value']):
+                    return { "message": "Saldo insuficiente!", "ok": False }
 
         database['transactions'].append(transactions_formatted)
 
