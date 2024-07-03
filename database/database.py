@@ -4,6 +4,6 @@ database = {
     "clients": [],
     "accounts": [],
     "token": None,
-    "apisList": ["172.28.17.16:3000"],
+    "apisList": [],
     "transactions": []
 }
