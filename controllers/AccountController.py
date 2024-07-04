@@ -115,10 +115,17 @@ class AccountController:
 
             transactions_formatted.append(obj)
 
+        amountSum = 0
+        fromAccount = AccountModel.findByAccountPass(fromAccountPass)
+        
+        for t in transactions_formatted:
+            amountSum += float(t['value'])
+
+        if float(fromAccount['balance']) < float(amountSum):
+            return { "message": "Valor total presente no pacote é superior ao seu saldo!", "ok": False }
 
         for t in transactions_formatted:
             if t['toReceive'] == 0:
-                fromAccount = AccountModel.findByAccountPass(fromAccountPass)
                 toAccount = AccountModel.findByAccountPass(t['to'])
                 agency = database['bankAgency']
 

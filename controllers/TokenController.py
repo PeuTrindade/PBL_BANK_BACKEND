@@ -10,7 +10,7 @@ class TokenController:
         try:
             while True:
                 if database['token'] and database['doingTransaction'] == False:
-                    tokenCoolDown = 30
+                    tokenCoolDown = 3000
 
                     time.sleep(tokenCoolDown)
 
