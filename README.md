@@ -13,100 +13,32 @@ A arquitetura da API segue um padrão semelhante ao MVC (Model-View-Controller),
 Para garantir o bom funcionamento do projeto em seu ambiente, é necessário que haja algumas ferramentas instaladas:
 
 ```
-Docker
 Python 3.10.5
-Node
-npm
 ```
 
 ## 🔧 Instalação
 
 Esta seção irá explicar como rodar este projeto em sua máquina local. 
 
-OBS: É possível visualizar o comportamento do sistema utilizando apenas uma máquina, ou uma máquina para cada subsistema. Porém, em caso de utilizar apenas uma, será possível a criação de apenas um ar-condicionado. Pois, cada ar-condicionado está atrelado à um endereço IP.
-
 ### 📦 Como baixar projeto:
 
 1) Baixe o projeto como ZIP em sua máquina, ou clone o repositório:
 
 ```
-git clone https://github.com/PeuTrindade/PBL-IoT.git
+git clone https://github.com/PeuTrindade/PBL_BANK_BACKEND.git
 ```
 
-2) Acesse pelo terminal o projeto `PBL-IOT`.
-
-### 💻 Como iniciar a interface:
-
-1) Inicie o Docker em sua máquina.
-
-2) Acesse a pasta `frontend` e execute o seguinte comando Docker:
-
+2) Acesse pelo terminal o projeto `PBL_BANK_BACKEND`.
+   
+3) Execute o programa:
+   
 ```
-docker build -t frontend .
-```
-
-3) Em seguida, execute este comando:
-
-```
-docker run --name frontend -p 3000:3000 frontend
-```
-
-OBS: Os passos 2 e 3 são para o uso do Docker, caso deseje utilizar o node/npm execute:
-
-```
-npm install
-npm start
-```
-
-### 📥 Como iniciar o Broker:
-
-1) Acesse a pasta `MessageBroker`.
-
-2) Execute o seguinte comando Docker:
-
-```
-docker build -t broker .
-```
-
-3) Em seguida, execute este comando:
-
-```
-docker run -p 4000:4000 -p 5000:5000/udp -p 5976:5976 broker
-```
-
-OBS: Os passos 2 e 3 são para o uso do Docker, caso deseje utilizar o python execute:
-
-```
-pip install -r requirements.txt
-python MessageBroker.py
-```
-
-### 🖲️ Como iniciar o sensor:
-
-1) Acesse a pasta `device`.
-
-2) Execute o seguinte comando:
-
-```
-docker build -t device .
-```
-
-3) Em seguida, execute o seguinte comando:
-
-```
-docker run -it --name device device
-```
-
-OBS: Os passos 2 e 3 são para o uso do Docker, caso deseje utilizar o python execute:
-
-```
-pip install -r requirements.txt
-python device.py
+python3 index.py
 ```
 
 ## Desenvolvimento do projeto
 
-Visando garantir uma melhor compreensão acerca do produto apresentado neste documento, é de suma importância expor como foi ele desenvolvido, além de justificar cada decisão tomada durante a codificação. É válido mencionar que, devido ao sistema ser composto por subpartes, houve uma ordem de criação. Tal ordem foi: broker, dispositivo, e por fim a interface.
+A arquitetura do projeto foi construída de maneira a garantir uma estrutura organizada e eficiente para o funcionamento da API. O sistema é composto por três principais models: Cliente, Conta e Token, cada um responsável por lidar com entidades específicas dentro do contexto bancário. O model Cliente gerencia informações relacionadas aos clientes dos bancos, como seus dados pessoais. O model Conta é responsável pelo gerenciamento das contas bancárias, incluindo saldo e outras informações financeiras relevantes. Por fim, o modelo Token desempenha um papel crucial na coordenação das transações entre os bancos, garantindo que apenas um banco por vez tenha permissão para realizar transações para evitar conflitos.
 
 Antes de aprofundar sobre cada subsistema do produto, é necessário ter uma noção a respeito da arquitetura geral. O Broker, sendo um software de gerenciamento de mensagens, armazena as informações vitais do sistema, em uma estrutura de dados nomeada de dicionários. Ele organiza esses dados de acordo com as informações vindas dos dispositivos conectados a ele, que enviam seus estados de forma ininterrupta.
 
