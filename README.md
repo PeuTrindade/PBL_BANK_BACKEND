@@ -1,12 +1,10 @@
-# Sistema de ar-condicionados - PBL Redes 01
+# Sistema bancário descentralizado - PBL Redes 02
 
-Este documento tem como propósito, fornecer uma visão detalhada de um produto que simula uma API destinada a bancos que operam em um modelo de mutualismo descentralizado. O produto em questão facilita a interação entre diferentes instituições financeiras, permitindo uma colaboração eficiente e segura. Para viabilizar essa interação, foram utilizados protocolos HTTP para as comunicações entre os diferentes bancos que utilizam o projeto.
+O seguinte documento possui como principal propósito, abordar acerca do projeto construído neste repositório. Tal projeto, seria uma API para sistemas bancários que funcionam cooperativamente de maneira descentralizada. Diferentemente, dos sistemas bancários atuais, que possuem um banco central para gerenciar as transações e movimentações financeiras.
 
 ## 🚀 Overview do projeto
 
-A API foi desenvolvida em Python, utilizando a biblioteca Flask para simplificar o processo de construção. Um dos desafios enfrentados na criação de um sistema para bancos descentralizados é a gestão da concorrência durante as transferências. Para resolver este problema, foi implementado o algoritmo Token Ring, que regula os momentos em que cada banco pode realizar suas transações, evitando conflitos.
-
-A arquitetura da API segue um padrão semelhante ao MVC (Model-View-Controller), onde os models representam as entidades dos elementos bancários e os controllers concentram as regras de negócio. Essa abordagem estruturada facilita a manutenção e expansão do sistema, garantindo uma organização clara e eficiente do código.
+Para o desenvolvimento deste produto, foi escolhida uma arquitetura organizacional do código, além de um algoritmo para evitar o acontecimento de conflitos e concorrência. A arquitetura utilizada foi semelhante ao MVC, utilizando Models e Controllers para separar as camadas da API. Como algoritmo para lidar com a concorrência de transações, foi usado o Token Ring.
 
 ## 📋 Pré-requisitos
 
@@ -38,52 +36,30 @@ python3 index.py
 
 ## Desenvolvimento do projeto
 
-A arquitetura do projeto foi construída de maneira a garantir uma estrutura organizada e eficiente para o funcionamento da API. O sistema é composto por três principais models: Cliente, Conta e Token, cada um responsável por lidar com entidades específicas dentro do contexto bancário. O model Cliente gerencia informações relacionadas aos clientes dos bancos, como seus dados pessoais. O model Conta é responsável pelo gerenciamento das contas bancárias, incluindo saldo e outras informações financeiras relevantes. Por fim, o modelo Token desempenha um papel crucial na coordenação das transações entre os bancos, garantindo que apenas um banco por vez tenha permissão para realizar transações para evitar conflitos.
+É válido realizar uma melhor explanação a respeito do produto desenvolvido. Para a sua construção, foi utilizada a linguagem de programação Python, juntamente com a biblioteca Flask para facilitar a criação das rotas da API.
 
-Antes de aprofundar sobre cada subsistema do produto, é necessário ter uma noção a respeito da arquitetura geral. O Broker, sendo um software de gerenciamento de mensagens, armazena as informações vitais do sistema, em uma estrutura de dados nomeada de dicionários. Ele organiza esses dados de acordo com as informações vindas dos dispositivos conectados a ele, que enviam seus estados de forma ininterrupta.
+Buscando atingir um maior nível de organização e otimização, foi utilizada a arquitetura MVC, porém sem a camada visual, já que a API será testada pelo software Postman. Ela funciona da seguinte forma, os models armazenam em si as classes responsáveis pelo gerenciamento dos dados na lista de informações (simulação de um banco de dados). Ou seja, eles apenas inserem, modificam, atualizam ou excluem dados de forma direta, sem realizar validações prévias.
 
-A interface, por sua vez, busca os dados contidos no Broker, através do envio de requisições para a API (Application Programming Interface) pertencente ao Broker. Segue abaixo um diagrama exemplificando a arquitetura geral do produto. (Ver figura 1)
+Os controllers, por sua vez, realizam a parte de validações e possuem em si a regra de negócio. Eles ditam como os dados devem ser processados, como devem ser recebidos e para onde vão. Além disso, retornam as mensagens de erro ou de sucesso para as rotas.
 
-![Figura 1](https://github.com/PeuTrindade/PBL-IoT/assets/84353169/58935acf-791b-40c1-90e5-df6d9e9f8de2)
+Dessa forma, o fluxo dos dados seguindo a arquitetura seria da seguinte maneira. As rotas são chamadas através do Postman, sendo enviados os dados esperados. Após isso, a rota recebe os dados e os envia para o controller responsável, então eles serão validados e processados pela regra de negócio. Caso as informações enviadas forem corretas e válidas, serão enviadas ao model responsável, e caso não estejam, será retornada uma mensagem de erro para a rota e passada ao cliente. Segue abaixo um diagrama representando esse fluxo.
 
-Após a explanação a respeito da arquitetura geral do sistema, é importante destrinchar o Broker. Tal componente foi desenvolvido em dois arquivos distintos, utilizando a linguagem de programação Python. O primeiro deles contém a implementação de uma API, que será responsável por se comunicar com a interface, além da chamada da função principal do segundo arquivo, que irá iniciar o servidor de mensageria.
+![Figura 1](https://github.com/PeuTrindade/PBL_BANK_BACKEND/assets/84353169/25acd6ca-a45d-4c3c-bf04-c66bc4024811)
 
-Dessa forma, o arquivo principal, nomeado de “MessageBroker”, deve ser iniciado para que o Broker entre em execução. Assim, após a inicialização, tanto o servidor da API, quanto o servidor de gerenciamento de mensagens estarão em funcionamento lado a lado. Segue abaixo um diagrama ilustrando essa interação. (Ver figura 2)
+Por conta da descentralização dos sistemas bancários, não havendo um banco que gerencia todas as transações e movimentações, é possível que ocorra concorrências e conflitos, como por exemplo, transações sendo realizadas ao mesmo tempo. Esse fator pode gerar problemas nas contas bancárias, pois algum cliente pode ter seu dinheiro perdido em meio a tantas transações, ou outros receberem dinheiro de forma indevida. Para lidar com esse problema, foi necessária a utilização de um algoritmo.
 
-![Figura 2](https://github.com/PeuTrindade/PBL-IoT/assets/84353169/7c527115-f7aa-4407-a2f7-d8f4e69236bd)
+Existem diversos algoritmos que possuem como finalidade resolver essa situação indesejada, porém, para este projeto foi escolhido o algoritmo Token Ring devido a sua simplicidade. A teoria funciona da seguinte maneira, um token deve ser enviado para um banco inicialmente, e após um tempo determinado ele será passado para o próximo banco. Existe uma fila contendo o endereço de cada banco pertencente ao sistema.
 
-No que se refere à API, ela é composta por algumas rotas que serão chamadas pela interface, ou alguma plataforma de teste de APIs (Insomnia ou Postman). Tais rotas são: “/devices”, “/change_mode/<port>/<mode>” e “/change_temperature/<port>/<temperature>”. Elas servem para enviar os dados dos dispositivos conectados, alterar o modo (Ligado ou desligado) de um dispositivo específico e alterar a temperatura de um dispositivo específico, respectivamente. (Ver figura 3)
+O token serve como uma permissão para que o banco possa realizar suas transações. Dessa forma, apenas o banco que possui momentaneamente o Token pode operar, e após um determinado tempo, ele deve enviar para outro. Segue abaixo um diagrama representando esse funcionamento.
 
-![Figura 3](https://github.com/PeuTrindade/PBL-IoT/assets/84353169/aa828ad2-8919-4661-87cd-2cd14b093264)
+![Figura 2](https://github.com/PeuTrindade/PBL_BANK_BACKEND/assets/84353169/60eec6ed-5ba9-410d-bcba-f315438dbe57)
 
-Ao arquivo principal do Broker ser inicializado, é criada uma “thread” para executar o servidor de mensageria. Uma “thread” consiste em uma unidade básica de execução de um programa, que permite que diferentes partes do código sejam executadas simultaneamente. Dessa forma, foi necessária a utilização deste recurso para que a API e o servidor se mantivessem em funcionamento paralelamente sem conflitos.
+É possível que ocorram erros durante a transmissão do Token. Como por exemplo, o banco que deve recebê-lo em seguida pode estar offline por motivos internos, logo, o banco remetente irá tentar novamente até que o envio seja bem sucedido. Foi-se considerado que um banco não cairia por completo, apenas teriam pequenas quedas de conexões, então, não seria necessário ignorar o banco destinatário.
 
-Então, quando este servidor está em andamento, primeiramente são configurados os “sockets” (Recursos responsáveis por criar conexões entre diferentes computadores) para conexões TCP/IP e UDP. TCP/IP (Transmission Control Protocol) e UDP (User Datagram Protocol) são protocolos de comunicação, sendo o primeiro deles caracterizado pela entrega confiável e segura dos dados aos destinatários, enquanto o segundo é comumente utilizado para comunicações rápidas e eficientes, visto que não possui confiabilidade, podendo haver perda de informações. Ambos protocolos foram utilizados no Broker de acordo com os seus conceitos.
+Enquanto um banco não possui o token, as transações recebidas são armazenadas em uma lista. A partir do momento que o token é recebido, as transações são realizadas uma a uma. É válido ressaltar que se caso o tempo determinado para enviar o token acabe, ele só será enviado caso nenhuma transação esteja em andamento.
 
-Após tais configurações serem implementadas, é iniciada uma “thread” responsável por receber conexões. Quando uma conexão é recebida, os dados do conector são salvos em um dicionário de dispositivos, criando como chave identificatória o IP da máquina em que o dispositivo está funcionando. Além disso, a conexão é salva em um outro dicionário, para facilitar possíveis comunicações futuras.
+Após o entendimento do algoritmo utilizado, e como ocorre a lógica dos bancos, é necessário compreender as estruturas utilizadas para garantir o bom funcionamento do projeto. Foram utilizadas threads para garantir o funcionamento adequado em sincronia. Threads são sequências de instruções que ocorrem de forma paralela a outro processo em andamento.
 
-Além da thread mencionada acima, uma outra função se mantém em execução paralelamente. Ela tem como papel receber as mensagens vindas dos dispositivos em protocolo UDP. Assim, após uma mensagem ser capturada, é realizada uma lógica para verificar o endereço IP do emitente e o conteúdo, e por fim, é salvo no dicionário de dispositivos a informação recebida na localização do dispositivo que a enviou.
+Assim, existem três threads em funcionamento constante no programa. A primeira delas é a camada da API, responsável por receber as chamadas nas rotas a todo instante. As outras duas, são as threads responsáveis pelo gerenciamento do Token e da execução das transações. Com o uso desses três recursos, o sistema funciona sem bloquear nenhuma execução. Segue abaixo um diagrama contendo essa representação.
 
-Existem ainda duas funções importantes pertencentes ao arquivo auxiliar do Broker. Tais funções são utilizadas quando as rotas de alteração de modo e temperatura são requisitadas. Basicamente, elas recebem como parâmetro o endereço IP do dispositivo que o usuário deseja modificar, e o valor a ser substituído. Então, busca-se no dicionário de conexões a conexão referente àquele endereço, e é enviada ao dispositivo uma mensagem via protocolo TCP/IP contendo o novo dado a ser inserido. 
-
-Visando garantir segurança na implementação desses dois métodos, foi utilizado o protocolo TCP/IP, já que, trata-se de informações importantes que não podem ser perdidas. Segue abaixo um diagrama ilustrando todo o funcionamento do Broker. (Ver figura 4)
-
-![Figura 4](https://github.com/PeuTrindade/PBL-IoT/assets/84353169/820cd89b-257a-4468-82a8-fffef68d97d6)
-
-Após a conclusão da explanação a respeito do funcionamento do Broker, é válido abordar acerca do dispositivo. Tal subsistema, também desenvolvido com a linguagem de programação Python, é constituído por apenas um arquivo. A partir do momento em que este arquivo é iniciado, é requisitado ao usuário que ele preencha, via terminal, os dados de configuração do dispositivo. Tais dados são: nome do dispositivo, endereço IP do broker, porta de conexão TCP/IP e porta de conexão UDP.
-
-Ao serem inseridas as informações mencionadas acima, e o dispositivo ser devidamente conectado ao Broker, são iniciadas duas threads. A primeira delas é uma thread responsável por enviar de forma ininterrupta um objeto contendo as informações do dispositivo, utilizando o protocolo UDP. Esse objeto contém os seguintes dados: nome do dispositivo, logs, modo e temperatura. Buscando possuir compatibilidade com os conceitos dos protocolos de comunicações, foi utilizado o UDP para essa funcionalidade, já que, essas informações serão enviadas a todo momento ao Broker, logo, não existe a necessidade de garantir confiabilidade e segurança.
-
-A segunda thread, por sua vez, desempenha o papel de ouvir as mensagens vindas do Broker, via protocolo TCP/IP. Tais mensagens, são os dados recebidos pelo Broker pela API, quando algum usuário solicita por meio da interface, a alteração do modo do dispositivo ou a sua temperatura. Dessa forma, assim que uma mensagem é capturada por essa função, o valor recebido é substituído no objeto de informações do dispositivo.
-
-Paralelamente a essas duas threads, existe uma funcionalidade responsável pelo gerenciamento de um menu interativo. A partir dele, o usuário consegue manipular os estados do dispositivo, através de comandos em linha de comando, tais como: ligar, desligar, alterar temperatura e visualizar estado atual. Segue abaixo um diagrama ilustrando o funcionamento do dispositivo. (Ver figura 5)
-
-![Figura 5](https://github.com/PeuTrindade/PBL-IoT/assets/84353169/c5e40272-8c85-4db6-9628-08ef7787850a)
-
-Por fim, foi implementada a interface visual para o usuário interagir com todos os dispositivos, utilizando as tecnologias ReactJS e Bootstrap. Basicamente, esta interface irá se comunicar com a API do Broker, buscando informações a respeito dos dispositivos e as exibindo. Além disso, ela permite o envio de comandos, tais como: ligar, desligar e alterar temperatura. Buscando garantir uma melhor experiência ao usuário, os dados são atualizados a cada segundo.
-
-É importante comentar a respeito do desempenho da aplicação. De maneira geral, em um ambiente contendo uma boa conexão a internet, todos os subcomponentes conversam entre si com agilidade e eficiência. Foram elaborados alguns mecanismos para evitar lentidão e dados pesados, como por exemplo, limitação de logs dos dispositivos para apenas 10 registros, e aumento do buffer de mensagem na configuração do socket no Broker.
-
-À respeito da confiabilidade do sistema, é correto afirmar que todos os subsistemas possuem. Dessa forma, é possível remover a conexão à internet e inseri-la novamente, e em alguns segundos o sistema se sincronizará sem perda de informações.
-
-O Docker foi uma ferramenta bastante importante para o desenvolvimento. Ele permite a criação de imagens de aplicações em qualquer linguagem, e às sobe em um container virtual para a aplicação ser usada em qualquer máquina, mesmo que não possua as mesmas dependências e tecnologias usadas. Todos os subsistemas possuem um arquivo Docker, que irá permitir o seu uso em qualquer ambiente.
+![Figura 3](https://github.com/PeuTrindade/PBL_BANK_BACKEND/assets/84353169/25e0a074-0e76-4434-9cea-46d09f9b608d)
